@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.css": "scss",
+        "tim.h": "c",
+        "main.h": "c",
+        "ist8310driver.h": "c",
+        "struct_typedef.h": "c"
+    }
+}

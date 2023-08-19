@@ -19,11 +19,19 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
+#include "dma.h"
+#include "i2c.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "base/bsp/bsp_led.h"
+#include "base/bsp/bsp_adc.h"
+
+#include "base/imu/driver/ist8310driver.h"
 
 /* USER CODE END Includes */
 
@@ -55,6 +63,20 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+BoardLed led;
+Board_Monitor board_monitor;
+
+fp32 mag[3];
+long exit_cnt = 0;
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if(GPIO_Pin == IST8310_DRDY_Pin)
+    {
+				exit_cnt++;
+        ist8310_read_mag(mag);
+    }
+
+}
 
 /* USER CODE END 0 */
 
@@ -86,9 +108,39 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM1_Init();
+  MX_TIM4_Init();
+  MX_TIM8_Init();
+  MX_ADC1_Init();
+  MX_ADC3_Init();
+  MX_TIM5_Init();
+  MX_USART1_UART_Init();
+  MX_USART6_UART_Init();
+  MX_USART3_UART_Init();
+  MX_I2C3_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start(&htim4);
+  HAL_TIM_Base_Start(&htim5);
+  HAL_TIM_Base_Start(&htim8);
+
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+	
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+
+  __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);
+  __HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
+  __HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
+
+  ist8310_init();
+
+  led.init();
+	led.setColor(0xFF, 0xFF, 0xff);
+
+	board_monitor.init_vrefint_reciprocal();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -146,21 +198,41 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void led_br_toogle() {
-	HAL_GPIO_TogglePin(LED_B_GPIO_Port, LED_B_Pin);
-	HAL_GPIO_TogglePin(LED_R_GPIO_Port, LED_R_Pin);
-}
-
+long cnt = 0;
+int ist_rdy_cnt = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 	if (htim == &htim1) {
-		static int cnt = 0;
 		cnt ++;
-		if (cnt % 100 == 0) {
-			led_br_toogle();
+
+    if (cnt % 100 == 0) {
+      board_monitor.sampleBatteryVoltage();
+      board_monitor.sampleTemperate();
+    }
+
+		if (cnt == 10000) {
+			led.setModeBreath(1000);
+			led.setColor(0xff, 0x00, 0x00);
+		} else if (cnt == 20000) {
+			led.setColor(0x00, 0x00, 0xff);
+			led.setModeBlink(5, 50, 50);
+		}	else if (cnt < 5000) {
+			led.setColor(0xff, 0xff, 0xff);
+			led.setModeOn();
+		} else if (cnt < 10000) {
+			led.setModeOff();
+		} else if (cnt >= 30000) {
 			cnt = 0;
 		}
+		
+		
+		if (HAL_GPIO_ReadPin(IST8310_DRDY_GPIO_Port, IST8310_DRDY_Pin) == GPIO_PIN_RESET) {
+			ist_rdy_cnt++;
+		}
+		
+		led.handle();
 	}
 }
+
 /* USER CODE END 4 */
 
 /**
