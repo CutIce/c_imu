@@ -5,6 +5,7 @@
 "c_imu\adc.o"
 "c_imu\dma.o"
 "c_imu\i2c.o"
+"c_imu\spi.o"
 "c_imu\tim.o"
 "c_imu\usart.o"
 "c_imu\stm32f4xx_it.o"
@@ -26,6 +27,7 @@
 "c_imu\stm32f4xx_hal_exti.o"
 "c_imu\stm32f4xx_hal_i2c.o"
 "c_imu\stm32f4xx_hal_i2c_ex.o"
+"c_imu\stm32f4xx_hal_spi.o"
 "c_imu\stm32f4xx_hal_tim.o"
 "c_imu\stm32f4xx_hal_tim_ex.o"
 "c_imu\stm32f4xx_hal_uart.o"
@@ -35,6 +37,8 @@
 "c_imu\bsp_led.o"
 "c_imu\ist8310driver.o"
 "c_imu\ist8310driver_middleware.o"
+"c_imu\bmi088driver.o"
+"c_imu\bmi088middleware.o"
 --library_type=microlib --strict --scatter "c_imu\c_imu.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

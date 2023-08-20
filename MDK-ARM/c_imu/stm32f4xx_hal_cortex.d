@@ -31,6 +31,7 @@ c_imu\stm32f4xx_hal_cortex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_
 c_imu\stm32f4xx_hal_cortex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h
 c_imu\stm32f4xx_hal_cortex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 c_imu\stm32f4xx_hal_cortex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
+c_imu\stm32f4xx_hal_cortex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
 c_imu\stm32f4xx_hal_cortex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 c_imu\stm32f4xx_hal_cortex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 c_imu\stm32f4xx_hal_cortex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h

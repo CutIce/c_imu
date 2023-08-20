@@ -22,6 +22,7 @@
 #include "adc.h"
 #include "dma.h"
 #include "i2c.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -32,7 +33,7 @@
 #include "base/bsp/bsp_adc.h"
 
 #include "base/imu/driver/ist8310driver.h"
-
+#include "base/imu/driver/BMI088driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,6 +69,8 @@ Board_Monitor board_monitor;
 
 fp32 mag[3];
 long exit_cnt = 0;
+fp32 gyro[3], accel[3], temp;
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == IST8310_DRDY_Pin)
@@ -119,6 +122,8 @@ int main(void)
   MX_USART6_UART_Init();
   MX_USART3_UART_Init();
   MX_I2C3_Init();
+  MX_SPI1_Init();
+  MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim1);
   HAL_TIM_Base_Start(&htim4);
@@ -141,6 +146,8 @@ int main(void)
 	led.setColor(0xFF, 0xFF, 0xff);
 
 	board_monitor.init_vrefint_reciprocal();
+	
+	while (BMI088_init()) {;}
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -204,11 +211,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 	if (htim == &htim1) {
 		cnt ++;
 
-    if (cnt % 100 == 0) {
+    if (cnt % 10 == 0) {
       board_monitor.sampleBatteryVoltage();
       board_monitor.sampleTemperate();
+			BMI088_read(gyro, accel, &temp);
+
     }
 
+		
 		if (cnt == 10000) {
 			led.setModeBreath(1000);
 			led.setColor(0xff, 0x00, 0x00);

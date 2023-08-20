@@ -32,12 +32,14 @@ c_imu\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h
 c_imu\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h
 c_imu\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 c_imu\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
+c_imu\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
 c_imu\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 c_imu\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 c_imu\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 c_imu\main.o: ../Inc/adc.h
 c_imu\main.o: ../Inc/dma.h
 c_imu\main.o: ../Inc/i2c.h
+c_imu\main.o: ../Inc/spi.h
 c_imu\main.o: ../Inc/tim.h
 c_imu\main.o: ../Inc/usart.h
 c_imu\main.o: ../Inc/gpio.h
@@ -45,3 +47,4 @@ c_imu\main.o: ..\base/bsp/bsp_led.h
 c_imu\main.o: ..\base/bsp/bsp_adc.h
 c_imu\main.o: ..\base/imu/driver/ist8310driver.h
 c_imu\main.o: ..\base/imu/driver/struct_typedef.h
+c_imu\main.o: ..\base/imu/driver/BMI088driver.h
