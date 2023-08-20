@@ -40,7 +40,7 @@ void BoardLed::setModeBlink(uint8_t times = 1, uint32_t dt0 = 100, uint32_t dt1 
     blink_param_.times = times;
     blink_param_.dt[0] = dt0;
     blink_param_.dt[1] = dt1;
-    blink_param_.period = 2 * times * (dt0 + dt1);
+    blink_param_.period = 2 * times * dt0 + dt1;
 }
 
 void BoardLed::handle(void) {

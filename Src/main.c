@@ -29,6 +29,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <string.h>
+
 #include "base/bsp/bsp_led.h"
 #include "base/bsp/bsp_adc.h"
 
@@ -78,6 +81,22 @@ float accel_int_freq = 0;
 long gyro_int_cnt = 0;
 float gyro_int_freq = 0;
 
+uint8_t sumcheck(uint8_t* buf, uint8_t len);
+typedef __packed struct sensor_data_t {
+  float x;
+  float y;
+  float z;
+} sensor_data_t;
+typedef __packed struct imu_raw_t{
+  uint8_t sign;
+  sensor_data_t acc;
+  sensor_data_t gyro;
+  float temp;
+  uint8_t check;
+}imu_raw_t;
+
+imu_raw_t txdata;
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == IST8310_DRDY_Pin)
@@ -119,6 +138,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         accel_int_cnt = 0;
         lta = nta;
       }
+			BMI088_read(gyro, accel, &temp);
+      txdata.sign = 0x23;
+			memcpy(&txdata.acc, accel, 12);
+			memcpy(&txdata.gyro, gyro, 12);
+			txdata.temp = temp;
+			HAL_UART_Transmit_DMA(&huart1, (uint8_t*) &txdata.sign, sizeof(txdata));
     }
 
 
@@ -184,14 +209,22 @@ int main(void)
   __HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
   __HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
 
-  ist8310_init();
 
   led.init();
 	led.setColor(0xFF, 0xFF, 0xff);
 
+	led.setColor(0x00, 0x00, 0xff);
+  led.setModeBreath(1000);
+  
+  ist8310_init();
 	board_monitor.init_vrefint_reciprocal();
+	HAL_Delay(1000);
 	
 	while (BMI088_init()) {;}
+
+  led.setColor(0x00, 0xff, 0x00);
+	led.setModeBlink(1, 100, 300);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -259,25 +292,23 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
     if (cnt % 10 == 0) {
       board_monitor.sampleBatteryVoltage();
       board_monitor.sampleTemperate();
-			BMI088_read(gyro, accel, &temp);
-
     }
 
 		
-		if (cnt == 10000) {
-			led.setModeBreath(1000);
-			led.setColor(0xff, 0x00, 0x00);
-		} else if (cnt == 20000) {
-			led.setColor(0x00, 0x00, 0xff);
-			led.setModeBlink(5, 50, 50);
-		}	else if (cnt < 5000) {
-			led.setColor(0xff, 0xff, 0xff);
-			led.setModeOn();
-		} else if (cnt < 10000) {
-			led.setModeOff();
-		} else if (cnt >= 30000) {
-			cnt = 0;
-		}
+//		if (cnt == 10000) {
+//			led.setModeBreath(1000);
+//			led.setColor(0xff, 0x00, 0x00);
+//		} else if (cnt == 20000) {
+//			led.setColor(0x00, 0x00, 0xff);
+//			led.setModeBlink(5, 50, 50);
+//		}	else if (cnt < 5000) {
+//			led.setColor(0xff, 0xff, 0xff);
+//			led.setModeOn();
+//		} else if (cnt < 10000) {
+//			led.setModeOff();
+//		} else if (cnt >= 30000) {
+//			cnt = 0;
+//		}
 		
 		
 		if (HAL_GPIO_ReadPin(IST8310_DRDY_GPIO_Port, IST8310_DRDY_Pin) == GPIO_PIN_RESET) {
@@ -288,6 +319,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 	}
 }
 
+uint8_t sumcheck(uint8_t* buf, uint8_t len) {
+  uint8_t i = 0;
+  uint8_t sum = 0;
+  for (i = 0; i < len; ++i) {
+    sum += *(buf + i);
+  }
+  return sum;
+}
 /* USER CODE END 4 */
 
 /**
