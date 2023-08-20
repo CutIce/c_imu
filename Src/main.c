@@ -68,16 +68,60 @@ BoardLed led;
 Board_Monitor board_monitor;
 
 fp32 mag[3];
-long exit_cnt = 0;
 fp32 gyro[3], accel[3], temp;
+
+long time = 0;
+long mag_cnt = 0;
+float mag_freq = 0;
+long accel_int_cnt = 0;
+float accel_int_freq = 0;
+long gyro_int_cnt = 0;
+float gyro_int_freq = 0;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == IST8310_DRDY_Pin)
     {
-				exit_cnt++;
-        ist8310_read_mag(mag);
+      mag_cnt++;
+			
+			static long ltm = 0;
+			long ntm = time;
+			if (ntm - ltm >= 1000) {
+				mag_freq = (float) mag_cnt / (ntm - ltm) * 1000.0f;
+				mag_cnt = 0;
+				ltm = ntm;
+			}
+      ist8310_read_mag(mag);
     }
+
+    if (GPIO_Pin == INT1_GRYO_Pin) {
+      static long ltg = 0;
+      long ntg = time;
+
+      accel_int_cnt++;
+
+      if (ntg - ltg >= 1000) {
+        gyro_int_freq = (float)gyro_int_cnt / (float)(ntg - ltg) * 1000.f;
+        gyro_int_cnt = 0;
+        ltg = ntg;
+      }    
+    }
+		
+		
+    if (GPIO_Pin == INT1_ACCEL_Pin) {
+      static long lta = 0;
+      long nta = time;
+
+      accel_int_cnt++;
+
+      if (nta - lta >= 1000) {
+        accel_int_freq = (float)accel_int_cnt / (float)(nta - lta) * 1000.f;
+        accel_int_cnt = 0;
+        lta = nta;
+      }
+    }
+
+
 
 }
 
@@ -209,6 +253,7 @@ long cnt = 0;
 int ist_rdy_cnt = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 	if (htim == &htim1) {
+    time++;
 		cnt ++;
 
     if (cnt % 10 == 0) {
