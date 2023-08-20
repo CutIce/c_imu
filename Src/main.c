@@ -98,7 +98,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
       static long ltg = 0;
       long ntg = time;
 
-      accel_int_cnt++;
+      gyro_int_cnt++;
 
       if (ntg - ltg >= 1000) {
         gyro_int_freq = (float)gyro_int_cnt / (float)(ntg - ltg) * 1000.f;

@@ -4,6 +4,8 @@
         "tim.h": "c",
         "main.h": "c",
         "ist8310driver.h": "c",
-        "struct_typedef.h": "c"
+        "struct_typedef.h": "c",
+        "stdint.h": "c",
+        "bmi088reg.h": "c"
     }
 }
