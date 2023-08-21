@@ -91,7 +91,7 @@ typedef __packed struct imu_raw_t{
   uint8_t sign;
   sensor_data_t acc;
   sensor_data_t gyro;
-  float temp;
+  //float temp;
   uint8_t check;
 }imu_raw_t;
 
@@ -139,11 +139,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         lta = nta;
       }
 			BMI088_read(gyro, accel, &temp);
-      txdata.sign = 0x23;
 			memcpy(&txdata.acc, accel, 12);
 			memcpy(&txdata.gyro, gyro, 12);
-			txdata.temp = temp;
-			HAL_UART_Transmit_DMA(&huart1, (uint8_t*) &txdata.sign, sizeof(txdata));
+			//txdata.temp = temp;
+			HAL_UART_Transmit(&huart1, (uint8_t*) &txdata, sizeof(txdata), 3);
     }
 
 
@@ -189,7 +188,6 @@ int main(void)
   MX_TIM5_Init();
   MX_USART1_UART_Init();
   MX_USART6_UART_Init();
-  MX_USART3_UART_Init();
   MX_I2C3_Init();
   MX_SPI1_Init();
   MX_TIM10_Init();
@@ -205,11 +203,14 @@ int main(void)
   HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
 
-  __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);
-  __HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
-  __HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
+		//__HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);  //receive interrupt
+		
+    //__HAL_UART_ENABLE_IT(&huart1, UART_IT_TC);  //idle interrupt
+    __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);  //idle interrupt
+    //__HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);  //receive interrupt
+    __HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);  //idle interrupt
 
-
+	txdata.sign = 0X23;
   led.init();
 	led.setColor(0xFF, 0xFF, 0xff);
 
@@ -229,8 +230,16 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+		uint8_t data[4] = {0x73, 0x74, 0x75, 0x76};
+
+
   while (1)
   {
+//				HAL_UART_Transmit(&huart1, data, 4, 100);
+//        HAL_Delay(100);
+//        HAL_UART_Transmit(&huart6, data, 4, 100);
+//        HAL_Delay(100);
+		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -288,7 +297,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 	if (htim == &htim1) {
     time++;
 		cnt ++;
-
+		//HAL_UART_Transmit_IT(&huart1, (uint8_t*) &txdata, sizeof(txdata));
     if (cnt % 10 == 0) {
       board_monitor.sampleBatteryVoltage();
       board_monitor.sampleTemperate();
@@ -311,9 +320,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 //		}
 		
 		
-		if (HAL_GPIO_ReadPin(IST8310_DRDY_GPIO_Port, IST8310_DRDY_Pin) == GPIO_PIN_RESET) {
-			ist_rdy_cnt++;
-		}
+//		if (HAL_GPIO_ReadPin(IST8310_DRDY_GPIO_Port, IST8310_DRDY_Pin) == GPIO_PIN_RESET) {
+//			ist_rdy_cnt++;
+//		}
 		
 		led.handle();
 	}
