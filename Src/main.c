@@ -82,21 +82,29 @@ long gyro_int_cnt = 0;
 float gyro_int_freq = 0;
 
 uint8_t sumcheck(uint8_t* buf, uint8_t len);
-typedef __packed struct sensor_data_t {
+struct sensor_data_t {
   float x;
   float y;
   float z;
-} sensor_data_t;
-typedef __packed struct imu_raw_t{
+}__attribute__((packed));
+
+struct imu_raw_t{
   uint8_t sign;
   sensor_data_t acc;
   sensor_data_t gyro;
   //float temp;
   uint8_t check;
-}imu_raw_t;
+}__attribute__((packed));
 
 imu_raw_t txdata;
+size_t data_size = sizeof(txdata);
 
+uint8_t tx_freq_cnt = 0;
+float tx_freq = 0.f;
+float lt = 0;
+float nt = 0;
+float dt;
+float avg_dt = 0;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == IST8310_DRDY_Pin)
@@ -142,12 +150,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			memcpy(&txdata.acc, accel, 12);
 			memcpy(&txdata.gyro, gyro, 12);
 			//txdata.temp = temp;
-			HAL_UART_Transmit(&huart1, (uint8_t*) &txdata, sizeof(txdata), 3);
-    }
-
+			static int tx_cnt = 0;
+			tx_cnt++;
+			if (tx_cnt % 2 == 0) {
+				txdata.check = sumcheck((uint8_t*)&txdata, sizeof(txdata) - 2);
+				HAL_UART_Transmit_DMA(&huart1, (uint8_t*) &txdata, sizeof(txdata));
+				tx_cnt = 0;
+				tx_freq_cnt ++;
+				nt = time;
+				dt += nt - lt;
+				lt = nt;
+			}
+		}
 
 
 }
+uint8_t init_bmi088 = 0;
 
 /* USER CODE END 0 */
 
@@ -220,8 +238,10 @@ int main(void)
   ist8310_init();
 	board_monitor.init_vrefint_reciprocal();
 	HAL_Delay(1000);
-	
-	while (BMI088_init()) {;}
+
+	while (!init_bmi088) {
+		init_bmi088 = BMI088_init();
+	}
 
   led.setColor(0x00, 0xff, 0x00);
 	led.setModeBlink(1, 100, 300);
@@ -302,6 +322,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
       board_monitor.sampleBatteryVoltage();
       board_monitor.sampleTemperate();
     }
+		
+		if (time % 1000 == 0) {
+			tx_freq = tx_freq_cnt;
+			tx_freq_cnt = 0;
+			avg_dt = dt / (float)tx_freq;
+			dt = 0;
+		}
 
 		
 //		if (cnt == 10000) {
